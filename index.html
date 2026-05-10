@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DealScout — Live Deals Feed</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #FFF8F0;
+    --card: #FFFFFF;
+    --text: #1A1A2E;
+    --muted: #7A7A9D;
+    --border: #F0E8DF;
+    --accent1: #FF6B6B;
+    --accent2: #FFB347;
+    --accent3: #4ECDC4;
+    --accent4: #A78BFA;
+    --accent5: #34D399;
+    --accent6: #F472B6;
+    --tag-bg: #FFF0E6;
+    --tag-text: #D4530A;
+    --pill-active-bg: #1A1A2E;
+    --pill-active-text: #FFFFFF;
+    --shadow: 0 2px 12px rgba(26,26,46,0.08);
+    --shadow-hover: 0 6px 24px rgba(26,26,46,0.14);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-pill: 99px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    padding: 16px 16px 0;
+    border-bottom: 1.5px solid var(--border);
+  }
+  .top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .logo {
+    font-family: 'Nunito', sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--accent1); }
+  .logo em { color: var(--accent2); font-style: normal; }
+  .refresh-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .refresh-btn:hover { background: var(--text); color: #fff; border-color: var(--text); }
+  .refresh-btn svg { width: 13px; height: 13px; }
+  .refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── SEARCH ── */
+  .search-wrap {
+    position: relative;
+    margin-bottom: 12px;
+    display: none;
+  }
+  .search-wrap.open { display: block; }
+  .search-wrap input {
+    width: 100%;
+    padding: 11px 16px 11px 40px;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: var(--accent1); }
+  .search-wrap input::placeholder { color: var(--muted); }
+  .search-icon {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+    width: 16px; height: 16px;
+  }
+  .search-note {
+    font-size: 11px;
+    color: var(--muted);
+    padding: 0 4px 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .search-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .search-btn:hover { background: var(--text); color: #fff; border-color: var(--text); }
+  .search-btn.active { background: var(--accent1); color: #fff; border-color: var(--accent1); }
+  .search-btn svg { width: 13px; height: 13px; }
+
+  /* ── SOURCE PILLS ── */
+  .sources-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    scrollbar-width: none;
+  }
+  .sources-row::-webkit-scrollbar { display: none; }
+  .source-pill {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer;
+    border: 2px solid transparent;
+    background: var(--card);
+    color: var(--muted);
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+  .source-pill:hover { border-color: var(--border); color: var(--text); }
+  .source-pill.active {
+    background: var(--pill-active-bg);
+    color: var(--pill-active-text);
+    border-color: var(--pill-active-bg);
+  }
+  .source-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .stats-bar::-webkit-scrollbar { display: none; }
+  .stat-chip {
+    flex-shrink: 0;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    text-align: center;
+  }
+  .stat-chip .s-num {
+    font-family: 'Nunito', sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text);
+    line-height: 1;
+  }
+  .stat-chip .s-lbl {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+
+  /* ── SECTION HEADER ── */
+  .section-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 16px 8px;
+  }
+  .section-hdr h2 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .section-hdr .count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--tag-bg);
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+  }
+
+  /* ── DEAL FEED ── */
+  .feed { padding: 0 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  .deal-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+    color: inherit;
+  }
+  .deal-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+  }
+  .deal-card:active { transform: translateY(0); }
+
+  .card-top-bar {
+    height: 5px;
+    width: 100%;
+  }
+  .card-body { padding: 14px 14px 12px; }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 7px;
+  }
+  .source-badge {
+    font-size: 10px;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
+    letter-spacing: 0.3px;
+  }
+  .time-ago {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .card-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--text);
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .go-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    padding: 7px 16px;
+    border-radius: var(--radius-pill);
+    background: var(--text);
+    color: #fff;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    flex-shrink: 0;
+  }
+  .go-btn:hover { background: var(--accent1); }
+  .go-btn svg { width: 12px; height: 12px; }
+
+  .card-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    font-family: 'Nunito', sans-serif;
+  }
+
+  /* ── LOADING / EMPTY / ERROR ── */
+  .feed-status {
+    padding: 48px 16px;
+    text-align: center;
+    color: var(--muted);
+  }
+  .feed-status .big-icon { font-size: 40px; margin-bottom: 12px; }
+  .feed-status h3 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .feed-status p { font-size: 13px; line-height: 1.5; }
+
+  .skeleton { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .skel-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    padding: 14px;
+  }
+  .skel-line {
+    background: var(--border);
+    border-radius: 6px;
+    margin-bottom: 8px;
+  }
+
+  /* ── SOURCE ERRORS ── */
+  .source-error {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #D4530A;
+    background: #FFF0E6;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    margin: 0 16px 8px;
+  }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--card);
+    border-top: 1.5px solid var(--border);
+    display: flex;
+    padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+    z-index: 100;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: color 0.15s;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    border: none;
+    background: none;
+  }
+  .nav-item svg { width: 22px; height: 22px; }
+  .nav-item.active { color: var(--accent1); }
+
+  /* ── SORT BAR ── */
+  .sort-bar {
+    display: flex;
+    gap: 6px;
+    padding: 0 16px 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .sort-bar::-webkit-scrollbar { display: none; }
+  .sort-btn {
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    padding: 6px 13px;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .sort-btn.active {
+    background: var(--accent2);
+    color: #fff;
+    border-color: var(--accent2);
+  }
+  .sort-btn:hover:not(.active) { border-color: var(--text); color: var(--text); }
+
+  /* ── LAST UPDATED ── */
+  .last-updated {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 8px 16px 16px;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="top-row">
+    <div class="logo" style="display:flex;align-items:baseline;gap:6px">
+      Deal<span>Scout</span> <em>🏷️</em>
+      <span style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.2px;font-family:'DM Sans',sans-serif;align-self:center">by SBB</span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="search-btn" id="search-toggle-btn" onclick="toggleSearch()" aria-label="Toggle search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Search
+      </button>
+      <button class="refresh-btn" id="refresh-btn" onclick="loadAllFeeds()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="search-wrap" id="search-wrap">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="search-input" placeholder="Search deals, stores, keywords…" oninput="renderFeed()" />
+  </div>
+  <div class="search-note" id="search-note" style="display:none">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    Searches only the deals currently loaded — refresh first to get the latest.
+  </div>
+
+  <div class="sources-row" id="sources-row"></div>
+</header>
+
+<!-- STATS -->
+<div class="stats-bar" id="stats-bar"></div>
+
+<!-- SORT -->
+<div class="sort-bar">
+  <button class="sort-btn active" onclick="setSort('newest',this)">🕐 Newest</button>
+  <button class="sort-btn" onclick="setSort('oldest',this)">⏳ Oldest</button>
+  <button class="sort-btn" onclick="setSort('az',this)">🔤 A–Z</button>
+</div>
+
+<!-- SECTION HEADER -->
+<div class="section-hdr">
+  <h2 id="section-title">Live Deals</h2>
+  <span class="count" id="deal-count">—</span>
+</div>
+
+<!-- ERRORS -->
+<div id="errors-wrap"></div>
+
+<!-- FEED -->
+<main id="feed" class="feed"></main>
+
+<!-- LAST UPDATED -->
+<div class="last-updated" id="last-updated"></div>
+
+<!-- BUILT BY -->
+<div style="text-align:center;padding:4px 16px 14px;font-size:11px;color:var(--muted)">
+  <span style="font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;color:var(--text)">DealScout</span>
+  &nbsp;built by <span style="font-family:'Nunito',sans-serif;font-weight:800;color:var(--accent1)">SBB</span>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="setNav('feed',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Feed
+  </button>
+  <button class="nav-item" onclick="setNav('saved',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    Saved
+  </button>
+  <button class="nav-item" onclick="setNav('sources',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+    Sources
+  </button>
+</nav>
+
+<script>
+const SOURCES = [
+  {
+    id: 'slickdeals',
+    label: 'Slickdeals',
+    url: 'https://slickdeals.net/newsearch.php?mode=frontpage&searcharea=deals&searchin=first_word&rss=1',
+    color: '#FF6B6B',
+    dot: '#FF6B6B',
+    badgeBg: '#FFF0F0',
+    badgeColor: '#CC2200'
+  },
+  {
+    id: 'dealnews',
+    label: 'DealNews',
+    url: 'https://www.dealnews.com/c142/Electronics/?rss=1',
+    color: '#FFB347',
+    dot: '#FFB347',
+    badgeBg: '#FFF8EC',
+    badgeColor: '#A05000'
+  },
+  {
+    id: 'reddit',
+    label: 'r/deals',
+    url: 'https://www.reddit.com/r/deals/.rss',
+    color: '#FF4500',
+    dot: '#FF4500',
+    badgeBg: '#FFF2EE',
+    badgeColor: '#C03000'
+  },
+  {
+    id: 'dealnews_home',
+    label: 'Home & Garden',
+    url: 'https://www.dealnews.com/c328/Home-Garden/?rss=1',
+    color: '#34D399',
+    dot: '#34D399',
+    badgeBg: '#EDFAF4',
+    badgeColor: '#06633A'
+  },
+  {
+    id: 'dealnews_fashion',
+    label: 'Fashion',
+    url: 'https://www.dealnews.com/c196/Clothing-Accessories/?rss=1',
+    color: '#F472B6',
+    dot: '#F472B6',
+    badgeBg: '#FEF0F7',
+    badgeColor: '#9D1B6E'
+  },
+  {
+    id: 'dealnews_travel',
+    label: 'Travel',
+    url: 'https://www.dealnews.com/c194/Travel/?rss=1',
+    color: '#A78BFA',
+    dot: '#A78BFA',
+    badgeBg: '#F5F3FF',
+    badgeColor: '#5B21B6'
+  }
+];
+
+const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
+
+let allDeals = [];
+let savedIds = JSON.parse(localStorage.getItem('ds_saved_v2') || '[]');
+let activeSource = 'all';
+let activeSort = 'newest';
+let activeNav = 'feed';
+let sourceStatus = {};
+
+function timeAgo(dateStr) {
+  const now = new Date();
+  const then = new Date(dateStr);
+  if (isNaN(then)) return '';
+  const diff = Math.floor((now - then) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+
+function stripHtml(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html || '';
+  return tmp.textContent || tmp.innerText || '';
+}
+
+function renderSkeleton() {
+  const feed = document.getElementById('feed');
+  feed.innerHTML = Array(5).fill(0).map(() => `
+    <div class="skel-card skeleton">
+      <div class="skel-line" style="height:12px;width:30%"></div>
+      <div class="skel-line" style="height:18px;width:90%;margin-top:10px"></div>
+      <div class="skel-line" style="height:18px;width:70%"></div>
+      <div class="skel-line" style="height:12px;width:50%;margin-top:8px"></div>
+    </div>
+  `).join('');
+}
+
+function renderSources() {
+  const row = document.getElementById('sources-row');
+  const allActive = activeSource === 'all';
+  row.innerHTML = `
+    <div class="source-pill ${allActive ? 'active' : ''}" onclick="setSource('all')">
+      <span class="source-dot" style="background:#1A1A2E"></span> All
+    </div>
+  ` + SOURCES.map(s => {
+    const active = activeSource === s.id;
+    const status = sourceStatus[s.id];
+    const indicator = status === 'error' ? ' ⚠️' : status === 'loading' ? ' …' : '';
+    return `
+      <div class="source-pill ${active ? 'active' : ''}" onclick="setSource('${s.id}')">
+        <span class="source-dot" style="background:${s.color}"></span>
+        ${s.label}${indicator}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderStats() {
+  const visible = getVisible();
+  const loaded = SOURCES.filter(s => sourceStatus[s.id] === 'ok').length;
+  const total = SOURCES.length;
+  document.getElementById('stats-bar').innerHTML = `
+    <div class="stat-chip"><div class="s-num">${visible.length}</div><div class="s-lbl">Deals</div></div>
+    <div class="stat-chip"><div class="s-num">${loaded}/${total}</div><div class="s-lbl">Sources</div></div>
+    <div class="stat-chip"><div class="s-num">${savedIds.length}</div><div class="s-lbl">Saved</div></div>
+    <div class="stat-chip"><div class="s-num">${allDeals.length}</div><div class="s-lbl">Total</div></div>
+  `;
+}
+
+function renderErrors() {
+  const wrap = document.getElementById('errors-wrap');
+  const errors = SOURCES.filter(s => sourceStatus[s.id] === 'error');
+  if (!errors.length) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = errors.map(s =>
+    `<div class="source-error">⚠️ ${s.label} unavailable</div>`
+  ).join('');
+}
+
+function getVisible() {
+  let deals = activeNav === 'saved'
+    ? allDeals.filter(d => savedIds.includes(d.uid))
+    : allDeals;
+
+  if (activeSource !== 'all') deals = deals.filter(d => d.sourceId === activeSource);
+
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  if (q) deals = deals.filter(d =>
+    d.title.toLowerCase().includes(q) ||
+    (d.desc || '').toLowerCase().includes(q) ||
+    d.sourceName.toLowerCase().includes(q)
+  );
+
+  if (activeSort === 'newest') deals = [...deals].sort((a,b) => new Date(b.pubDate) - new Date(a.pubDate));
+  else if (activeSort === 'oldest') deals = [...deals].sort((a,b) => new Date(a.pubDate) - new Date(b.pubDate));
+  else if (activeSort === 'az') deals = [...deals].sort((a,b) => a.title.localeCompare(b.title));
+
+  return deals;
+}
+
+function renderFeed() {
+  const feed = document.getElementById('feed');
+  const visible = getVisible();
+  const src = activeSource !== 'all' ? SOURCES.find(s=>s.id===activeSource)?.label + ' Deals' : 'Live Deals';
+  document.getElementById('section-title').textContent = activeNav === 'saved' ? '❤️ Saved Deals' : src;
+  document.getElementById('deal-count').textContent = visible.length + (visible.length === 1 ? ' deal' : ' deals');
+  renderStats();
+  renderErrors();
+
+  if (!visible.length) {
+    const loading = Object.values(sourceStatus).some(s => s === 'loading');
+    if (loading) { renderSkeleton(); return; }
+    const q = document.getElementById('search-input').value.trim();
+    feed.innerHTML = `
+      <div class="feed-status">
+        <div class="big-icon">${activeNav==='saved' ? '💝' : '🔍'}</div>
+        <h3>${activeNav==='saved' ? 'No saved deals yet' : q ? 'No results found' : 'No deals loaded'}</h3>
+        <p>${activeNav==='saved' ? 'Tap the heart on any deal to save it.' : q ? `Nothing matched "${q}"` : 'Pull to refresh or check your connection.'}</p>
+      </div>`;
+    return;
+  }
+
+  feed.innerHTML = visible.map(deal => {
+    const src = SOURCES.find(s => s.id === deal.sourceId) || SOURCES[0];
+    const saved = savedIds.includes(deal.uid);
+    const desc = deal.desc ? deal.desc.slice(0, 120) + (deal.desc.length > 120 ? '…' : '') : '';
+    return `
+    <a class="deal-card" href="${deal.link}" target="_blank" rel="noopener" onclick="trackOpen(event,'${deal.uid}')">
+      <div class="card-top-bar" style="background:${src.color}"></div>
+      <div class="card-body">
+        <div class="card-meta">
+          <span class="source-badge" style="background:${src.badgeBg};color:${src.badgeColor}">${deal.sourceName}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="time-ago">${timeAgo(deal.pubDate)}</span>
+            <button onclick="toggleSave(event,'${deal.uid}')" style="background:none;border:none;cursor:pointer;font-size:18px;line-height:1;padding:2px" aria-label="${saved?'Remove from saved':'Save deal'}">
+              ${saved ? '❤️' : '🤍'}
+            </button>
+          </div>
+        </div>
+        <div class="card-title">${deal.title}</div>
+        ${desc ? `<div class="card-desc">${desc}</div>` : ''}
+        <div class="card-footer">
+          <div class="card-tags">
+            ${(deal.categories||[]).slice(0,2).map(c=>`<span class="tag">${c}</span>`).join('')}
+          </div>
+          <span class="go-btn">
+            Go to Deal
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </span>
+        </div>
+      </div>
+    </a>`;
+  }).join('');
+
+  document.getElementById('last-updated').textContent =
+    allDeals.length ? 'Last updated: ' + new Date().toLocaleTimeString() : '';
+}
+
+function toggleSave(e, uid) {
+  e.preventDefault();
+  e.stopPropagation();
+  if (savedIds.includes(uid)) savedIds = savedIds.filter(x => x !== uid);
+  else savedIds.push(uid);
+  localStorage.setItem('ds_saved_v2', JSON.stringify(savedIds));
+  renderFeed();
+}
+
+function trackOpen(e, uid) {
+  // allow default link open, just update saved state display
+  renderFeed();
+}
+
+function toggleSearch() {
+  const wrap = document.getElementById('search-wrap');
+  const note = document.getElementById('search-note');
+  const btn = document.getElementById('search-toggle-btn');
+  const isOpen = wrap.classList.toggle('open');
+  note.style.display = isOpen ? 'flex' : 'none';
+  btn.classList.toggle('active', isOpen);
+  if (isOpen) document.getElementById('search-input').focus();
+  else { document.getElementById('search-input').value = ''; renderFeed(); }
+}
+
+function setSource(id) {
+  activeSource = id;
+  renderSources();
+  renderFeed();
+}
+
+function setSort(s, btn) {
+  activeSort = s;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFeed();
+}
+
+function setNav(nav, btn) {
+  activeNav = nav;
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (nav === 'sources') showSourcesView();
+  else { document.getElementById('feed').style.display = 'flex'; renderFeed(); }
+}
+
+function showSourcesView() {
+  const feed = document.getElementById('feed');
+  feed.style.display = 'flex';
+  feed.innerHTML = SOURCES.map(s => {
+    const count = allDeals.filter(d => d.sourceId === s.id).length;
+    const status = sourceStatus[s.id];
+    const statusLabel = status === 'ok' ? `✅ ${count} deals` : status === 'loading' ? '⏳ Loading…' : '❌ Unavailable';
+    return `
+    <div class="deal-card" style="cursor:default">
+      <div class="card-top-bar" style="background:${s.color}"></div>
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="source-badge" style="background:${s.badgeBg};color:${s.badgeColor};font-size:13px;padding:5px 12px">${s.label}</span>
+          <span style="font-size:12px;font-weight:600;color:var(--muted)">${statusLabel}</span>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted);word-break:break-all">${s.url}</div>
+        <button onclick="setSource('${s.id}');setNav('feed',document.querySelectorAll('.nav-item')[0])"
+          style="margin-top:10px;font-size:12px;font-weight:700;font-family:'Nunito',sans-serif;padding:7px 16px;border-radius:99px;background:var(--text);color:#fff;border:none;cursor:pointer">
+          Browse ${s.label} →
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function fetchFeed(source) {
+  sourceStatus[source.id] = 'loading';
+  renderSources();
+  try {
+    const apiUrl = RSS2JSON + encodeURIComponent(source.url);
+    const res = await fetch(apiUrl);
+    const data = await res.json();
+    if (data.status !== 'ok') throw new Error(data.message || 'Feed error');
+
+    const items = (data.items || []).map(item => ({
+      uid: source.id + '_' + btoa(encodeURIComponent(item.link || item.guid || item.title)).slice(0,16),
+      sourceId: source.id,
+      sourceName: source.label,
+      title: stripHtml(item.title),
+      desc: stripHtml(item.description || item.content || '').replace(/\s+/g,' ').trim(),
+      link: item.link,
+      pubDate: item.pubDate,
+      categories: item.categories || [],
+      thumbnail: item.thumbnail || ''
+    }));
+
+    // Remove old items from this source, add new ones
+    allDeals = allDeals.filter(d => d.sourceId !== source.id);
+    allDeals.push(...items);
+    sourceStatus[source.id] = 'ok';
+  } catch(e) {
+    console.warn(`Feed error [${source.label}]:`, e);
+    sourceStatus[source.id] = 'error';
+  }
+  renderSources();
+  renderFeed();
+}
+
+async function loadAllFeeds() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  allDeals = [];
+  SOURCES.forEach(s => { sourceStatus[s.id] = 'loading'; });
+  renderSources();
+  renderSkeleton();
+  await Promise.allSettled(SOURCES.map(s => fetchFeed(s)));
+  btn.classList.remove('spinning');
+  renderFeed();
+}
+
+// Init
+renderSources();
+renderSkeleton();
+loadAllFeeds();
+</script>
+</body>
+</html>
