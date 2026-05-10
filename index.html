@@ -82,62 +82,6 @@
   .refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── SEARCH ── */
-  .search-wrap {
-    position: relative;
-    margin-bottom: 12px;
-    display: none;
-  }
-  .search-wrap.open { display: block; }
-  .search-wrap input {
-    width: 100%;
-    padding: 11px 16px 11px 40px;
-    border-radius: var(--radius-pill);
-    border: 1.5px solid var(--border);
-    background: var(--card);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .search-wrap input:focus { border-color: var(--accent1); }
-  .search-wrap input::placeholder { color: var(--muted); }
-  .search-icon {
-    position: absolute;
-    left: 13px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    pointer-events: none;
-    width: 16px; height: 16px;
-  }
-  .search-note {
-    font-size: 11px;
-    color: var(--muted);
-    padding: 0 4px 10px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .search-btn {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--muted);
-    background: var(--card);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-pill);
-    padding: 6px 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .search-btn:hover { background: var(--text); color: #fff; border-color: var(--text); }
-  .search-btn.active { background: var(--accent1); color: #fff; border-color: var(--accent1); }
-  .search-btn svg { width: 13px; height: 13px; }
-
   /* ── SOURCE PILLS ── */
   .sources-row {
     display: flex;
@@ -458,25 +402,10 @@
       Deal<span>Scout</span> <em>🏷️</em>
       <span style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.2px;font-family:'DM Sans',sans-serif;align-self:center">by SBB</span>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="search-btn" id="search-toggle-btn" onclick="toggleSearch()" aria-label="Toggle search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        Search
-      </button>
-      <button class="refresh-btn" id="refresh-btn" onclick="loadAllFeeds()">
+    <button class="refresh-btn" id="refresh-btn" onclick="loadAllFeeds()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
         Refresh
       </button>
-    </div>
-  </div>
-
-  <div class="search-wrap" id="search-wrap">
-    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input type="text" id="search-input" placeholder="Search deals, stores, keywords…" oninput="renderFeed()" />
-  </div>
-  <div class="search-note" id="search-note" style="display:none">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    Searches only the deals currently loaded — refresh first to get the latest.
   </div>
 
   <div class="sources-row" id="sources-row"></div>
@@ -595,22 +524,31 @@ const SOURCES = [
     badgeColor: '#0369A1'
   },
   {
-    id: 'bensbargains',
-    label: "Ben's Bargains",
-    url: 'https://bensbargains.com/rss/',
+    id: 'spoofee',
+    label: 'Spoofee',
+    url: 'https://www.spoofee.com/rss.php',
+    color: '#10B981',
+    dot: '#10B981',
+    badgeBg: '#ECFDF5',
+    badgeColor: '#065F46'
+  },
+  {
+    id: 'moneysavingmom',
+    label: 'Money Saving Mom',
+    url: 'https://moneysavingmom.com/feed',
     color: '#F59E0B',
     dot: '#F59E0B',
     badgeBg: '#FFFBEB',
     badgeColor: '#92400E'
   },
   {
-    id: 'bensbargains_sports',
-    label: 'Sports & Outdoors',
-    url: 'https://bensbargains.com/c/sports-fitness-outdoors/rss/',
-    color: '#10B981',
-    dot: '#10B981',
-    badgeBg: '#ECFDF5',
-    badgeColor: '#065F46'
+    id: 'freestufffinder',
+    label: 'Free Stuff Finder',
+    url: 'https://freestufffinder.com/feed',
+    color: '#EF4444',
+    dot: '#EF4444',
+    badgeBg: '#FEF2F2',
+    badgeColor: '#991B1B'
   },
   {
     id: 'reddit_frugal',
@@ -631,13 +569,22 @@ const SOURCES = [
     badgeColor: '#9D174D'
   },
   {
-    id: 'krazycouponlady',
-    label: 'Krazy Coupon Lady',
-    url: 'https://thekrazycouponlady.com/feed/',
-    color: '#EF4444',
-    dot: '#EF4444',
+    id: 'buildapcsales',
+    label: 'r/buildapcsales',
+    url: 'https://www.reddit.com/r/buildapcsales/.rss',
+    color: '#FF4500',
+    dot: '#FF4500',
+    badgeBg: '#FFF2EE',
+    badgeColor: '#C03000'
+  },
+  {
+    id: 'tomshardware',
+    label: "Tom's Hardware",
+    url: 'https://www.tomshardware.com/feeds/all',
+    color: '#DC2626',
+    dot: '#DC2626',
     badgeBg: '#FEF2F2',
-    badgeColor: '#991B1B'
+    badgeColor: '#7F1D1D'
   }
 ];
 
@@ -727,13 +674,6 @@ function getVisible() {
 
   if (activeSource !== 'all') deals = deals.filter(d => d.sourceId === activeSource);
 
-  const q = document.getElementById('search-input').value.trim().toLowerCase();
-  if (q) deals = deals.filter(d =>
-    d.title.toLowerCase().includes(q) ||
-    (d.desc || '').toLowerCase().includes(q) ||
-    d.sourceName.toLowerCase().includes(q)
-  );
-
   if (activeSort === 'newest') deals = [...deals].sort((a,b) => new Date(b.pubDate) - new Date(a.pubDate));
   else if (activeSort === 'oldest') deals = [...deals].sort((a,b) => new Date(a.pubDate) - new Date(b.pubDate));
   else if (activeSort === 'az') deals = [...deals].sort((a,b) => a.title.localeCompare(b.title));
@@ -753,12 +693,11 @@ function renderFeed() {
   if (!visible.length) {
     const loading = Object.values(sourceStatus).some(s => s === 'loading');
     if (loading) { renderSkeleton(); return; }
-    const q = document.getElementById('search-input').value.trim();
     feed.innerHTML = `
       <div class="feed-status">
-        <div class="big-icon">${activeNav==='saved' ? '💝' : '🔍'}</div>
-        <h3>${activeNav==='saved' ? 'No saved deals yet' : q ? 'No results found' : 'No deals loaded'}</h3>
-        <p>${activeNav==='saved' ? 'Tap the heart on any deal to save it.' : q ? `Nothing matched "${q}"` : 'Pull to refresh or check your connection.'}</p>
+        <div class="big-icon">${activeNav==='saved' ? '💝' : '📭'}</div>
+        <h3>${activeNav==='saved' ? 'No saved deals yet' : 'No deals loaded'}</h3>
+        <p>${activeNav==='saved' ? 'Tap the heart on any deal to save it.' : 'Refresh to load the latest deals.'}</p>
       </div>`;
     return;
   }
@@ -811,17 +750,6 @@ function toggleSave(e, uid) {
 function trackOpen(e, uid) {
   // allow default link open, just update saved state display
   renderFeed();
-}
-
-function toggleSearch() {
-  const wrap = document.getElementById('search-wrap');
-  const note = document.getElementById('search-note');
-  const btn = document.getElementById('search-toggle-btn');
-  const isOpen = wrap.classList.toggle('open');
-  note.style.display = isOpen ? 'flex' : 'none';
-  btn.classList.toggle('active', isOpen);
-  if (isOpen) document.getElementById('search-input').focus();
-  else { document.getElementById('search-input').value = ''; renderFeed(); }
 }
 
 function setSource(id) {
